@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { ArtworkColumnLayout, ArtworkDisplayType, ArtworkItem } from "@/lib/types";
 
@@ -12,6 +13,7 @@ type ProjectDraft = {
   description: string;
   category: "drawing" | "sculptures";
   media: string[];
+  heroImage: string;
   displayType: ArtworkDisplayType;
   columnLayout: ArtworkColumnLayout;
   portfolio_order: number;
@@ -25,12 +27,22 @@ const emptyDraft: ProjectDraft = {
   description: "",
   category: "drawing",
   media: [],
+  heroImage: "",
   displayType: "single",
   columnLayout: 3,
   portfolio_order: 0,
   show_in_portfolio: true,
   active: false
 };
+
+function resolveHeroImage(media: string[], currentHero: string): string {
+  const cleanMedia = media.filter(Boolean);
+  if (cleanMedia.length === 0) return "";
+  if (currentHero && cleanMedia.includes(currentHero)) {
+    return currentHero;
+  }
+  return cleanMedia[0];
+}
 
 function slugify(value: string): string {
   return value
@@ -56,6 +68,7 @@ function toDraft(item: ArtworkItem): ProjectDraft {
     description: item.description || "",
     category: item.category,
     media,
+    heroImage: resolveHeroImage(media, item.hero_image || item.thumbnail || ""),
     displayType: item.displayType || (item.detail_template === "carousel" ? "carousel" : "single"),
     columnLayout: item.columnLayout || (item.detail_template === "gallery4" ? 4 : item.detail_template === "single" ? 1 : 3),
     portfolio_order: item.portfolio_order,
@@ -66,6 +79,7 @@ function toDraft(item: ArtworkItem): ProjectDraft {
 
 function toApiPayload(draft: ProjectDraft, publish: boolean): Record<string, unknown> {
   const media = draft.media.filter(Boolean);
+  const heroImage = resolveHeroImage(media, draft.heroImage);
   return {
     id: draft.id,
     title: draft.title.trim(),
@@ -73,10 +87,11 @@ function toApiPayload(draft: ProjectDraft, publish: boolean): Record<string, unk
     description: draft.description.trim(),
     category: draft.category,
     media,
+    hero_image: heroImage,
     displayType: draft.displayType,
     columnLayout: draft.columnLayout,
     // Backward-compatible fields used by existing public pages.
-    thumbnail: media[0] || "",
+    thumbnail: heroImage || media[0] || "",
     detail_images: media,
     detail_template: draft.displayType === "carousel" ? "carousel" : "single",
     detail_url: "",
@@ -106,10 +121,12 @@ async function uploadSingleImage(file: File): Promise<string> {
 
 function MediaReorderList({
   media,
+  heroImage,
   onChange
 }: {
   media: string[];
-  onChange: (next: string[]) => void;
+  heroImage: string;
+  onChange: (next: { media: string[]; heroImage: string }) => void;
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
@@ -117,7 +134,7 @@ function MediaReorderList({
     const next = [...media];
     const [picked] = next.splice(from, 1);
     next.splice(to, 0, picked);
-    onChange(next);
+    onChange({ media: next, heroImage: resolveHeroImage(next, heroImage) });
   }
 
   if (media.length === 0) {
@@ -142,14 +159,28 @@ function MediaReorderList({
         >
           <img src={normalizeImagePath(src)} alt={`Media ${index + 1}`} className="h-40 w-full rounded-lg object-cover" />
           <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="text-xs text-zinc-500">Drag to reorder</span>
-            <button
-              type="button"
-              onClick={() => onChange(media.filter((_, i) => i !== index))}
-              className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-            >
-              Remove
-            </button>
+            <span className={`text-xs ${heroImage === src ? "font-semibold text-emerald-700" : "text-zinc-500"}`}>
+              {heroImage === src ? "Hero image" : "Drag to reorder"}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onChange({ media: [...media], heroImage: src })}
+                className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100"
+              >
+                Set hero
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextMedia = media.filter((_, i) => i !== index);
+                  onChange({ media: nextMedia, heroImage: resolveHeroImage(nextMedia, heroImage) });
+                }}
+                className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+              >
+                Remove
+              </button>
+            </div>
           </div>
         </div>
       ))}
@@ -338,7 +369,10 @@ export default function AdminPage() {
 
     try {
       const uploaded = await Promise.all(list.map((file) => uploadSingleImage(file)));
-      setDraft((prev) => ({ ...prev, media: [...prev.media, ...uploaded] }));
+      setDraft((prev) => {
+        const media = [...prev.media, ...uploaded];
+        return { ...prev, media, heroImage: resolveHeroImage(media, prev.heroImage) };
+      });
       setNotice(`${uploaded.length} image(s) uploaded.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
@@ -428,21 +462,26 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-4 sm:p-6 lg:p-8">
+    <div className="admin-page-fix min-h-screen bg-zinc-50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl space-y-5">
         <header className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
           <div>
             <h1 className="text-2xl font-semibold text-zinc-900">Project Media Dashboard</h1>
             <p className="mt-1 text-sm text-zinc-500">Upload media, choose single/carousel display, and configure 3 or 4 column public layout.</p>
           </div>
-          <button onClick={handleLogout} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100">Logout</button>
+          <div className="flex items-center gap-2">
+            <Link href="/admin/home" className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100">
+              Home photos
+            </Link>
+            <button onClick={handleLogout} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100">Logout</button>
+          </div>
         </header>
 
         {notice ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{notice}</p> : null}
         {error ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
 
-        <div className="grid gap-5 lg:grid-cols-[1.3fr_0.9fr]">
-          <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="grid gap-5 lg:grid-cols-[minmax(420px,1.2fr)_minmax(0,1.8fr)]">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-zinc-900">{editingId ? "Edit Project" : "New Project"}</h2>
               {editingId ? (
@@ -569,7 +608,11 @@ export default function AdminPage() {
 
             <div className="mt-4">
               <p className="mb-2 text-sm font-medium text-zinc-700">Media Order (drag and drop)</p>
-              <MediaReorderList media={draft.media} onChange={(next) => setDraft((prev) => ({ ...prev, media: next }))} />
+              <MediaReorderList
+                media={draft.media}
+                heroImage={draft.heroImage}
+                onChange={(next) => setDraft((prev) => ({ ...prev, media: next.media, heroImage: next.heroImage }))}
+              />
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
@@ -590,12 +633,12 @@ export default function AdminPage() {
                 Publish
               </button>
             </div>
-          </section>
+          </div>
 
           <PreviewPanel draft={draft} />
         </div>
 
-        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-900">Projects ({sortedItems.length})</h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {sortedItems.map((item) => (
@@ -634,7 +677,7 @@ export default function AdminPage() {
               </article>
             ))}
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );

@@ -16,6 +16,8 @@ type RawArtworkItem = Partial<ArtworkItem> & {
   media?: unknown;
   displayType?: unknown;
   columnLayout?: unknown;
+  hero_image?: unknown;
+  heroImage?: unknown;
 };
 
 type LegacyDetailMeta = {
@@ -141,6 +143,7 @@ function normalizeBaseItem(input: RawArtworkItem): Omit<ArtworkItem, "slug" | "d
     media: mergedMedia,
     displayType,
     columnLayout,
+    hero_image: String(input.hero_image ?? input.heroImage ?? "").trim(),
     thumbnail: String(input.thumbnail ?? "").trim(),
     detail_url: String(input.detail_url ?? "#").trim(),
     portfolio_order: Number.isFinite(input.portfolio_order) ? Number(input.portfolio_order) : 0,
@@ -188,6 +191,8 @@ function normalizeWithDetails(input: RawArtworkItem, legacyMeta: LegacyDetailMet
     ...base,
     slug,
     media: detailImages,
+    hero_image: base.hero_image || base.thumbnail || detailImages[0] || "",
+    thumbnail: base.thumbnail || base.hero_image || detailImages[0] || "",
     displayType,
     columnLayout,
     detail_template: detailTemplate,
@@ -209,7 +214,26 @@ async function readRawDataFile(): Promise<string> {
   try {
     return await fs.readFile(primary, "utf8");
   } catch {
-    return await fs.readFile(localDataPath, "utf8");
+    try {
+      return await fs.readFile(localDataPath, "utf8");
+    } catch {
+      // First boot: no data file yet. Start with an empty portfolio.
+      return "[]";
+    }
+  }
+}
+
+function parseRawItems(raw: string): RawArtworkItem[] {
+  try {
+    return JSON.parse(raw) as RawArtworkItem[];
+  } catch {
+    const firstBracket = raw.indexOf("[");
+    const lastBracket = raw.lastIndexOf("]");
+    if (firstBracket !== -1 && lastBracket > firstBracket) {
+      const recovered = raw.slice(firstBracket, lastBracket + 1);
+      return JSON.parse(recovered) as RawArtworkItem[];
+    }
+    throw new Error("Invalid portfolio JSON format");
   }
 }
 
@@ -230,7 +254,7 @@ export function artworkDetailPath(item: Pick<ArtworkItem, "slug">): string {
 
 export async function readPortfolioItems(): Promise<ArtworkItem[]> {
   const raw = await readRawDataFile();
-  const parsed = JSON.parse(raw) as RawArtworkItem[];
+  const parsed = parseRawItems(raw);
 
   const items = await Promise.all(
     parsed.map(async (entry) => {

@@ -34,3 +34,43 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - `NEXT_ADMIN_PASSWORD` for `/admin` login
 - Optional `PORTFOLIO_DATA_PATH` to override default JSON path
+
+## CI/CD to VPS (MicroK8s)
+
+Deployment files are in `k8s/`:
+- `k8s/namespace.yaml`
+- `k8s/deployment.yaml`
+- `k8s/service.yaml`
+- `k8s/ingress.yaml`
+
+GitHub Actions workflows:
+- `.github/workflows/ci.yml` (typecheck + build)
+- `.github/workflows/deploy-microk8s.yml` (build image, push to GHCR, deploy on VPS)
+
+### VPS prerequisites
+
+Run once on the VPS:
+
+```bash
+sudo snap install microk8s --classic
+sudo microk8s status --wait-ready
+sudo microk8s enable dns ingress
+sudo mkdir -p /var/snap/microk8s/common/heidi/data
+sudo mkdir -p /var/snap/microk8s/common/heidi/uploads
+```
+
+### Required GitHub Secrets
+
+Set these in repository settings:
+- `VPS_HOST`
+- `VPS_USER`
+- `VPS_SSH_KEY` (private key content)
+- `NEXT_ADMIN_PASSWORD`
+- `GHCR_USERNAME`
+- `GHCR_TOKEN` (token with `read:packages` and `write:packages`)
+
+### Domain / ingress
+
+Update host in `k8s/ingress.yaml`:
+- replace `heidi.example.com` with your real domain
+- point your DNS `A` record to the VPS public IP

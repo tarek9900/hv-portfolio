@@ -7,6 +7,7 @@ type SinglePhotoDetailProps = {
 
 export function SinglePhotoDetail({ title, images }: SinglePhotoDetailProps) {
   const primary = images[0];
+  const fancyboxGroup = `gallery-${title || "project"}`;
 
   if (!primary) {
     return null;
@@ -17,7 +18,9 @@ export function SinglePhotoDetail({ title, images }: SinglePhotoDetailProps) {
       <div className="container">
         <div className="single-item">
           <div className="pro-img">
-            <img src={normalizeImagePath(primary)} alt={title} />
+            <a data-fancybox={fancyboxGroup} href={normalizeImagePath(primary)}>
+              <img src={normalizeImagePath(primary)} alt={title} />
+            </a>
           </div>
         </div>
       </div>

@@ -12,6 +12,7 @@ export interface ArtworkItem {
   media: string[];
   displayType: ArtworkDisplayType;
   columnLayout: ArtworkColumnLayout;
+  hero_image: string;
   thumbnail: string;
   detail_url: string;
   detail_template: ArtworkDetailTemplate;

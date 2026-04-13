@@ -9,6 +9,9 @@ import { LegacyFooter, LegacyHeader, LegacySearchPanel } from "@/components/lega
 import { readPortfolioItems } from "@/lib/portfolio-store";
 import type { ArtworkItem } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type DetailPageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ filter?: string }>;
@@ -25,7 +28,7 @@ function renderTemplate(item: ArtworkItem) {
   const images = item.detail_images.length > 0 ? item.detail_images : item.thumbnail ? [item.thumbnail] : [];
 
   if (item.detail_template === "carousel") {
-    return <CarouselDetail title={item.title} images={images} />;
+    return <CarouselDetail title={item.title} images={images} columnLayout={item.columnLayout} />;
   }
 
   if (item.detail_template === "gallery3") {

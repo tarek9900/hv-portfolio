@@ -6,14 +6,18 @@ type FourColumnGalleryDetailProps = {
 };
 
 export function FourColumnGalleryDetail({ title, images }: FourColumnGalleryDetailProps) {
+  const fancyboxGroup = `gallery-${title || "project"}`;
+
   return (
-    <div className="portfolio-area ptb-100" style={{ paddingBottom: "100px" }}>
+    <div className="portfolio-area ptb-80" style={{ paddingBottom: "100px" }}>
       <div className="container">
-        <div className="masonry-wrap-active iamge-loaded-active image-loaded-active margin-minus-7 four-column">
+        <div className="iamge-loaded-active margin-minus-7 four-column hover-st3 fix">
           {images.map((image, index) => (
             <div key={`${image}-${index}`} className="single-item">
               <div className="pro-img">
-                <img src={normalizeImagePath(image)} alt={`${title} ${index + 1}`} />
+                <a data-fancybox={fancyboxGroup} href={normalizeImagePath(image)}>
+                  <img src={normalizeImagePath(image)} alt={`${title} ${index + 1}`} />
+                </a>
               </div>
             </div>
           ))}

@@ -1,0 +1,100 @@
+name: Deploy to MicroK8s
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  NAMESPACE: heidi
+  APP_NAME: heidi-next-site
+  DEPLOY_PATH: /opt/heidi-next-site
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          IMAGE_SHA="ghcr.io/${{ github.repository }}:${{ github.sha }}"
+          IMAGE_LATEST="ghcr.io/${{ github.repository }}:latest"
+          echo "image_sha=${IMAGE_SHA,,}" >> "$GITHUB_OUTPUT"
+          echo "image_latest=${IMAGE_LATEST,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image_sha }}
+            ${{ steps.meta.outputs.image_latest }}
+
+      - name: Upload k8s manifests to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "k8s/*"
+          target: "${{ env.DEPLOY_PATH }}"
+          overwrite: true
+          strip_components: 1
+
+      - name: Deploy on VPS with MicroK8s
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE: ${{ steps.meta.outputs.image_sha }}
+          NAMESPACE: ${{ env.NAMESPACE }}
+          APP_NAME: ${{ env.APP_NAME }}
+          DEPLOY_PATH: ${{ env.DEPLOY_PATH }}
+          NEXT_ADMIN_PASSWORD: ${{ secrets.NEXT_ADMIN_PASSWORD }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: IMAGE,NAMESPACE,APP_NAME,DEPLOY_PATH,NEXT_ADMIN_PASSWORD,GHCR_USERNAME,GHCR_TOKEN
+          script: |
+            set -euo pipefail
+
+            KUBECTL="microk8s kubectl"
+
+            # Namespace and manifests
+            $KUBECTL apply -f "$DEPLOY_PATH/namespace.yaml"
+            $KUBECTL -n "$NAMESPACE" apply -f "$DEPLOY_PATH/service.yaml"
+            $KUBECTL -n "$NAMESPACE" apply -f "$DEPLOY_PATH/deployment.yaml"
+            $KUBECTL -n "$NAMESPACE" apply -f "$DEPLOY_PATH/ingress.yaml"
+
+            # App secret
+            $KUBECTL -n "$NAMESPACE" create secret generic heidi-next-secret \
+              --from-literal=NEXT_ADMIN_PASSWORD="$NEXT_ADMIN_PASSWORD" \
+              --dry-run=client -o yaml | $KUBECTL apply -f -
+
+            # GHCR pull secret for the cluster
+            $KUBECTL -n "$NAMESPACE" create secret docker-registry ghcr-creds \
+              --docker-server=ghcr.io \
+              --docker-username="$GHCR_USERNAME" \
+              --docker-password="$GHCR_TOKEN" \
+              --dry-run=client -o yaml | $KUBECTL apply -f -
+
+            # Roll to the new image
+            $KUBECTL -n "$NAMESPACE" set image deployment/"$APP_NAME" app="$IMAGE"
+            $KUBECTL -n "$NAMESPACE" rollout status deployment/"$APP_NAME" --timeout=180s

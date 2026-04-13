@@ -82,7 +82,15 @@ export function buildArtworkPayload(input: Record<string, unknown>, current?: Ar
             : []
   );
 
-  const thumbnail = asString(input.thumbnail) || media[0] || current?.thumbnail || "";
+  const heroImage =
+    asString(input.hero_image) ||
+    asString(input.heroImage) ||
+    asString(input.thumbnail) ||
+    current?.hero_image ||
+    current?.thumbnail ||
+    media[0] ||
+    "";
+  const thumbnail = heroImage || media[0] || current?.thumbnail || "";
   const homeImage = asString(input.home_image) || current?.home_image || "";
   const detailImages = media.length > 0 ? media : thumbnail ? [thumbnail] : [];
 
@@ -101,6 +109,7 @@ export function buildArtworkPayload(input: Record<string, unknown>, current?: Ar
     media,
     displayType,
     columnLayout,
+    hero_image: heroImage,
     thumbnail,
     detail_url: asString(input.detail_url) || current?.detail_url || "#",
     detail_template: detailTemplate,

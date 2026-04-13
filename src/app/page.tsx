@@ -1,6 +1,9 @@
 import { artworkDetailPath, getFeaturedItems, getPortfolioItems, normalizeImagePath } from "@/lib/portfolio-store";
 import { LegacyFooter, LegacyHeader, LegacySearchPanel, inlineImageStyle } from "@/components/legacy-shell";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function HomePage() {
   const [featured, portfolio] = await Promise.all([getFeaturedItems(2), getPortfolioItems()]);
 

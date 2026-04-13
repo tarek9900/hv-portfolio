@@ -1,6 +1,9 @@
 import { LegacyFooter, LegacyHeader, LegacySearchPanel } from "@/components/legacy-shell";
 import { artworkDetailPath, getPortfolioItems, normalizeImagePath } from "@/lib/portfolio-store";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type FilterValue = "all" | "drawing" | "sculptures";
 
 function normalizeFilter(value: string | undefined): FilterValue {
@@ -12,7 +15,7 @@ function normalizeFilter(value: string | undefined): FilterValue {
 
 function portfolioFilterHref(filter: FilterValue): string {
   if (filter === "all") {
-    return "/portfolio";
+    return "/portfolio?filter=all";
   }
   return `/portfolio?filter=${filter}`;
 }
@@ -75,7 +78,7 @@ export default async function PortfolioPage({
                   >
                     <div className="pro-img">
                       <a href={detailHref}>
-                        <img src={normalizeImagePath(item.thumbnail)} alt={item.title} />
+                        <img src={normalizeImagePath(item.hero_image || item.thumbnail || item.media?.[0] || "")} alt={item.title} />
                       </a>
                     </div>
                     <div className="pro-content-hover">
