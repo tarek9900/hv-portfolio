@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: public
   rules:
-    - host: heidi.example.com
+    - host: heidivestin.com
       http:
         paths:
           - path: /
