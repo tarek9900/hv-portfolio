@@ -62,9 +62,8 @@ sudo mkdir -p /var/snap/microk8s/common/heidi/uploads
 ### Required GitHub Secrets
 
 Set these in repository settings:
-- `VPS_HOST`
-- `VPS_USER`
-- `VPS_SSH_KEY` (private key content)
+- `CLUSTER_IP` (Repository variable)
+- `CLUSTER_SSH_KEY` (Repository secret, private key content for user `github-actions`)
 - `NEXT_ADMIN_PASSWORD`
 - `GHCR_USERNAME`
 - `GHCR_TOKEN` (token with `read:packages` and `write:packages`)
