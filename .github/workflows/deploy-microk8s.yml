@@ -12,7 +12,7 @@ permissions:
 env:
   NAMESPACE: hv-portfolio
   APP_NAME: heidi-next-site
-  DEPLOY_PATH: /opt/heidi-next-site
+  DEPLOY_PATH: /home/github-actions/heidi-next-site
   REGISTRY: api.repoflow.io
   REPOFLOW_NAMESPACE: benguizat-5295/hv
 
