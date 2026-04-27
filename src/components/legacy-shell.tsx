@@ -51,7 +51,7 @@ export function LegacyHeader() {
                     <a href="/portfolio">Portfolio</a>
                   </li>
                   <li>
-                    <a href="/contact.html">Contact</a>
+                    <a href="/contact">Contact</a>
                   </li>
                 </ul>
               </nav>
