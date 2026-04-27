@@ -5,8 +5,13 @@ metadata:
   namespace: hv-portfolio
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: public
+  tls:
+    - hosts:
+        - heidivestin.com
+      secretName: heidivestin-com-tls
   rules:
     - host: heidivestin.com
       http:

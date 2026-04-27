@@ -39,6 +39,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Deployment files are in `k8s/`:
 - `k8s/namespace.yaml`
+- `k8s/cluster-issuer.yaml`
 - `k8s/deployment.yaml`
 - `k8s/service.yaml`
 - `k8s/ingress.yaml`
@@ -54,7 +55,7 @@ Run once on the VPS:
 ```bash
 sudo snap install microk8s --classic
 sudo microk8s status --wait-ready
-sudo microk8s enable dns ingress
+sudo microk8s enable dns ingress cert-manager
 sudo mkdir -p /var/snap/microk8s/common/heidi/data
 sudo mkdir -p /var/snap/microk8s/common/heidi/uploads
 ```
@@ -72,3 +73,11 @@ Set these in repository settings:
 Update host in `k8s/ingress.yaml`:
 - replace `heidi.example.com` with your real domain
 - point your DNS `A` record to the VPS public IP
+
+### HTTPS certificates
+
+TLS is provisioned automatically by cert-manager using Let's Encrypt:
+- Issuer: `k8s/cluster-issuer.yaml` (`letsencrypt-prod`)
+- Ingress secret: `heidivestin-com-tls`
+
+If needed, change the ACME email in `k8s/cluster-issuer.yaml`.

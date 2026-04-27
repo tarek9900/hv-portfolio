@@ -80,6 +80,7 @@ jobs:
 
             # Namespace and manifests
             $KUBECTL apply -f "$DEPLOY_PATH/namespace.yaml"
+            $KUBECTL apply -f "$DEPLOY_PATH/cluster-issuer.yaml"
             $KUBECTL -n "$NAMESPACE" apply -f "$DEPLOY_PATH/service.yaml"
             $KUBECTL -n "$NAMESPACE" apply -f "$DEPLOY_PATH/deployment.yaml"
             $KUBECTL -n "$NAMESPACE" apply -f "$DEPLOY_PATH/ingress.yaml"
