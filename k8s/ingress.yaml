@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: heidi-next-site
-  namespace: heidi
+  namespace: hv-portfolio
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "25m"
 spec:
@@ -18,4 +18,3 @@ spec:
                 name: heidi-next-site
                 port:
                   number: 80
-

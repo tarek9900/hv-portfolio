@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 env:
-  NAMESPACE: heidi
+  NAMESPACE: hv-portfolio
   APP_NAME: heidi-next-site
   DEPLOY_PATH: /opt/heidi-next-site
 

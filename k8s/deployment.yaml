@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: heidi-next-site
-  namespace: heidi
+  namespace: hv-portfolio
 spec:
   replicas: 1
   selector:
@@ -64,4 +64,3 @@ spec:
           hostPath:
             path: /var/snap/microk8s/common/heidi/uploads
             type: DirectoryOrCreate
-

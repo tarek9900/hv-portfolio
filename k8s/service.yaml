@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: heidi-next-site
-  namespace: heidi
+  namespace: hv-portfolio
 spec:
   selector:
     app: heidi-next-site
@@ -11,4 +11,3 @@ spec:
       port: 80
       targetPort: 3000
   type: ClusterIP
-
