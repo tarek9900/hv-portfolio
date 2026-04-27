@@ -14,10 +14,10 @@ spec:
         app: heidi-next-site
     spec:
       imagePullSecrets:
-        - name: ghcr-creds
+        - name: repoflow-creds
       containers:
         - name: app
-          image: ghcr.io/OWNER/REPO:latest
+          image: api.repoflow.io/benguizat-5295/hv/heidi-next-site:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

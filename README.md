@@ -45,7 +45,7 @@ Deployment files are in `k8s/`:
 
 GitHub Actions workflows:
 - `.github/workflows/ci.yml` (typecheck + build)
-- `.github/workflows/deploy-microk8s.yml` (build image, push to GHCR, deploy on VPS)
+- `.github/workflows/deploy-microk8s.yml` (build image, push to Repoflow, deploy on VPS)
 
 ### VPS prerequisites
 
@@ -65,8 +65,7 @@ Set these in repository settings:
 - `CLUSTER_IP` (Repository variable)
 - `CLUSTER_SSH_KEY` (Repository secret, private key content for user `github-actions`)
 - `NEXT_ADMIN_PASSWORD`
-- `GHCR_USERNAME`
-- `GHCR_TOKEN` (token with `read:packages` and `write:packages`)
+- `REPOFLOW_TOKEN` (registry token)
 
 ### Domain / ingress
 
