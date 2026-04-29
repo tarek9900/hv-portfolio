@@ -29,6 +29,8 @@ spec:
                   key: NEXT_ADMIN_PASSWORD
             - name: PORTFOLIO_DATA_PATH
               value: /data/portfolio-items.json
+            - name: PORTFOLIO_UPLOADS_PATH
+              value: /data/uploads
             - name: NODE_ENV
               value: production
           readinessProbe:
@@ -54,7 +56,7 @@ spec:
             - name: app-data
               mountPath: /data
             - name: app-uploads
-              mountPath: /app/public/uploads
+              mountPath: /data/uploads
       volumes:
         - name: app-data
           hostPath:

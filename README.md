@@ -34,6 +34,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - `NEXT_ADMIN_PASSWORD` for `/admin` login
 - Optional `PORTFOLIO_DATA_PATH` to override default JSON path
+- Optional `PORTFOLIO_UPLOADS_PATH` to override uploaded files path
 
 ## CI/CD to VPS (MicroK8s)
 

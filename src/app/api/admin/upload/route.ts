@@ -13,6 +13,10 @@ const typeToExtension: Record<string, string> = {
   "image/gif": "gif"
 };
 
+function uploadsDir(): string {
+  return process.env.PORTFOLIO_UPLOADS_PATH || path.resolve(process.cwd(), "public", "uploads");
+}
+
 export async function POST(request: NextRequest) {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -31,7 +35,7 @@ export async function POST(request: NextRequest) {
   }
 
   const fileName = `art_${Date.now()}_${randomUUID().slice(0, 6)}.${extension}`;
-  const uploadDir = path.resolve(process.cwd(), "public", "uploads");
+  const uploadDir = uploadsDir();
   const targetPath = path.join(uploadDir, fileName);
   const bytes = Buffer.from(await file.arrayBuffer());
 

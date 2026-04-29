@@ -24,8 +24,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.ts ./next.config.ts
 
 # Runtime writable dirs
-RUN mkdir -p /app/public/uploads /data
+RUN mkdir -p /app/public/uploads /data/uploads
 
 EXPOSE 3000
 CMD ["npm", "run", "start", "--", "--port", "3000"]
-

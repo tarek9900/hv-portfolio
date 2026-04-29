@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 export const adminCookieName = "heidi_admin_session";
 
 export function getAdminPassword(): string {
-  return process.env.NEXT_ADMIN_PASSWORD?.trim() || "change-me";
+  return process.env.NEXT_ADMIN_PASSWORD?.trim() || "LipTipsIsAGoodCat";
 }
 
 export async function isAdminAuthenticated(): Promise<boolean> {
